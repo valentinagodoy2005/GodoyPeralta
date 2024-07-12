@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Valoración de Inventario</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        form {
+            margin-bottom: 20px;
+        }
+
+        label {
+            margin-right: 10px;
+        }
+
+        input {
+            margin-bottom: 10px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <h1>Ultimo Entrado Primero Salido</h1>
+    <form id="valoresForm">
+        <label for="lunesEntrada">Entrada Lunes (unidades, precio):</label>
+        <input type="number" id="lunesUnidades" value="70">
+        <input type="number" id="lunesPrecio" value="572"><br>
+        
+        <label for="miercolesEntrada">Entrada Miércoles (unidades, precio):</label>
+        <input type="number" id="miercolesUnidades" value="100">
+        <input type="number" id="miercolesPrecio" value="565"><br>
+        
+        <label for="viernesEntrada">Entrada Viernes (unidades, precio):</label>
+        <input type="number" id="viernesUnidades" value="150">
+        <input type="number" id="viernesPrecio" value="557"><br>
+        
+        <button type="button" onclick="calcularValores()">Calcular</button>
+    </form>
+
+    <table id="resultTable">
+        <thead>
+            <tr>
+                <th>Día</th>
+                <th>Unidades Vendidas</th>
+                <th>Valor de Venta (Promedio)</th>
+                <th>Unidades en Stock</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Aquí se insertarán los resultados -->
+        </tbody>
+    </table>
+
+    <script>
+        function calcularValores() {
+            const lunesUnidades = parseInt(document.getElementById('lunesUnidades').value);
+            const lunesPrecio = parseFloat(document.getElementById('lunesPrecio').value);
+            
+            const miercolesUnidades = parseInt(document.getElementById('miercolesUnidades').value);
+            const miercolesPrecio = parseFloat(document.getElementById('miercolesPrecio').value);
+            
+            const viernesUnidades = parseInt(document.getElementById('viernesUnidades').value);
+            const viernesPrecio = parseFloat(document.getElementById('viernesPrecio').value);
+            
+            const salidas = [
+                { dia: 'Lunes', unidades: 20 },
+                { dia: 'Martes', unidades: 30 },
+                { dia: 'Miércoles', unidades: 75 },
+                { dia: 'Jueves', unidades: 65 },
+                { dia: 'Viernes', unidades: 130 }
+            ];
+            
+            const semanas = 3;
+            const inventarioInicial = 350;
+            const precioInicial = 557;
+
+            let inventario = [
+                { unidades: inventarioInicial, precio: precioInicial }
+            ];
+
+            const entradas = [
+                { dia: 'Lunes', unidades: lunesUnidades, precio: lunesPrecio },
+                { dia: 'Miércoles', unidades: miercolesUnidades, precio: miercolesPrecio },
+                { dia: 'Viernes', unidades: viernesUnidades, precio: viernesPrecio }
+            ];
+
+            let tablaResultados = document.getElementById('resultTable').getElementsByTagName('tbody')[0];
+            tablaResultados.innerHTML = '';
+
+            for (let semana = 1; semana <= semanas; semana++) {
+                for (let i = 0; i < 5; i++) {
+                    let salida = salidas[i];
+                    let entrada = entradas.find(e => e.dia === salida.dia);
+                    if (entrada) {
+                        inventario.push({ unidades: entrada.unidades, precio: entrada.precio });
+                    }
+
+                    let unidadesVendidas = salida.unidades;
+                    let valorVentaTotal = 0;
+                    let unidadesEnStock = inventario.reduce((acc, item) => acc + item.unidades, 0);
+
+                    while (unidadesVendidas > 0 && inventario.length > 0) {
+                        let ultimaEntrada = inventario[inventario.length - 1];
+                        if (unidadesVendidas >= ultimaEntrada.unidades) {
+                            valorVentaTotal += ultimaEntrada.unidades * ultimaEntrada.precio;
+                            unidadesVendidas -= ultimaEntrada.unidades;
+                            inventario.pop();
+                        } else {
+                            valorVentaTotal += unidadesVendidas * ultimaEntrada.precio;
+                            ultimaEntrada.unidades -= unidadesVendidas;
+                            unidadesVendidas = 0;
+                        }
+                    }
+
+                    unidadesEnStock = inventario.reduce((acc, item) => acc + item.unidades, 0);
+                    let valorVentaPromedio = valorVentaTotal / salida.unidades;
+
+                    let nuevaFila = tablaResultados.insertRow();
+                    nuevaFila.insertCell().innerText = `Semana ${semana} - ${salida.dia}`;
+                    nuevaFila.insertCell().innerText = salida.unidades;
+                    nuevaFila.insertCell().innerText = valorVentaPromedio.toFixed(2);
+                    nuevaFila.insertCell().innerText = unidadesEnStock;
+                }
+            }
+        }
+    </script>
+</body>
+</html>

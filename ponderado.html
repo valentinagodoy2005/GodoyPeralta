@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculo Promedio Ponderado para Placas Arduino</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+        h1, h2 {
+            color: #333;
+        }
+
+        .input-section {
+            margin-bottom: 20px;
+        }
+
+        .input-group {
+            margin-bottom: 10px;
+        }
+
+        label {
+            margin-right: 10px;
+        }
+
+        input[type="number"] {
+            margin-right: 20px;
+            padding: 5px;
+            width: 80px;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <h1>Calculo Promedio Ponderado para Placas Arduino</h1>
+    <div class="input-section">
+        <label for="inventarioInicial">Inventario Inicial: </label>
+        <input type="number" id="inventarioInicial" value="350" min="0">
+        <label for="costoInicial">Costo Inicial: </label>
+        <input type="number" id="costoInicial" value="557" step="0.01" min="0">
+    </div>
+    <div class="input-section">
+        <h2>Entradas Semanales</h2>
+        <div class="input-group">
+            <label for="entradaLunes">Lunes: </label>
+            <input type="number" id="entradaLunes" value="70" min="0">
+            <label for="costoLunes">Costo: </label>
+            <input type="number" id="costoLunes" value="572" step="0.01" min="0">
+        </div>
+        <div class="input-group">
+            <label for="entradaMiercoles">Miércoles: </label>
+            <input type="number" id="entradaMiercoles" value="100" min="0">
+            <label for="costoMiercoles">Costo: </label>
+            <input type="number" id="costoMiercoles" value="565" step="0.01" min="0">
+        </div>
+        <div class="input-group">
+            <label for="entradaViernes">Viernes: </label>
+            <input type="number" id="entradaViernes" value="150" min="0">
+            <label for="costoViernes">Costo: </label>
+            <input type="number" id="costoViernes" value="557" step="0.01" min="0">
+        </div>
+    </div>
+    <div class="input-section">
+        <h2>Salidas Diarias</h2>
+        <div class="input-group">
+            <label for="salidaLunes">Lunes: </label>
+            <input type="number" id="salidaLunes" value="20" min="0">
+        </div>
+        <div class="input-group">
+            <label for="salidaMartes">Martes: </label>
+            <input type="number" id="salidaMartes" value="30" min="0">
+        </div>
+        <div class="input-group">
+            <label for="salidaMiercoles">Miércoles: </label>
+            <input type="number" id="salidaMiercoles" value="75" min="0">
+        </div>
+        <div class="input-group">
+            <label for="salidaJueves">Jueves: </label>
+            <input type="number" id="salidaJueves" value="65" min="0">
+        </div>
+        <div class="input-group">
+            <label for="salidaViernes">Viernes: </label>
+            <input type="number" id="salidaViernes" value="130" min="0">
+        </div>
+    </div>
+    <button onclick="calcularVentas()">Calcular Ventas</button>
+    <table id="resultado">
+        <thead>
+            <tr>
+                <th>Semana</th>
+                <th>Día</th>
+                <th>Valor Promedio Ponderado</th>
+                <th>Cantidad Total</th>
+                <th>Unidades Vendidas</th>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+
+    <script>
+        function calcularVentas() {
+            // Obtener datos iniciales
+            let inventarioInicial = parseInt(document.getElementById('inventarioInicial').value);
+            let costoInicial = parseFloat(document.getElementById('costoInicial').value);
+
+            // Obtener entradas semanales
+            let entradas = {
+                'Lunes': { unidades: parseInt(document.getElementById('entradaLunes').value), costo: parseFloat(document.getElementById('costoLunes').value) },
+                'Miércoles': { unidades: parseInt(document.getElementById('entradaMiercoles').value), costo: parseFloat(document.getElementById('costoMiercoles').value) },
+                'Viernes': { unidades: parseInt(document.getElementById('entradaViernes').value), costo: parseFloat(document.getElementById('costoViernes').value) }
+            };
+
+            // Obtener salidas diarias
+            let salidas = {
+                'Lunes': parseInt(document.getElementById('salidaLunes').value),
+                'Martes': parseInt(document.getElementById('salidaMartes').value),
+                'Miércoles': parseInt(document.getElementById('salidaMiercoles').value),
+                'Jueves': parseInt(document.getElementById('salidaJueves').value),
+                'Viernes': parseInt(document.getElementById('salidaViernes').value)
+            };
+
+            // Inicializar inventario y costo total
+            let inventario = inventarioInicial;
+            let costoTotal = inventarioInicial * costoInicial;
+            let unidadesVendidasAcumuladas = 0;
+
+            // Calcular el valor diario de venta durante 3 semanas
+            let valorVentaDiaria = [];
+            let dias = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes'];
+
+            for (let semana = 1; semana <= 3; semana++) {
+                for (let dia of dias) {
+                    // Registrar entradas si las hay
+                    if (entradas[dia]) {
+                        inventario += entradas[dia].unidades;
+                        costoTotal += entradas[dia].unidades * entradas[dia].costo;
+                    }
+
+                    // Calcular el costo promedio ponderado solo si el inventario no es cero
+                    let costoPromedioPonderado = inventario != 0 ? costoTotal / inventario : 0;
+
+                    // Registrar la salida
+                    let unidadesVendidas = salidas[dia];
+                    if (unidadesVendidas > inventario) {
+                        alert(`No hay suficientes unidades en inventario para vender ${unidadesVendidas} unidades el ${dia}`);
+                        return;
+                    }
+
+                    inventario -= unidadesVendidas;
+                    costoTotal -= unidadesVendidas * costoPromedioPonderado;
+                    unidadesVendidasAcumuladas += unidadesVendidas;
+
+                    // Guardar el valor de venta diaria y el inventario restante
+                    valorVentaDiaria.push({ semana, dia, valor: costoPromedioPonderado, inventario, unidadesVendidasAcumuladas });
+                }
+            }
+
+            // Mostrar los resultados
+            let tbody = document.getElementById('resultado').getElementsByTagName('tbody')[0];
+            tbody.innerHTML = ''; // Limpiar resultados anteriores
+            for (let registro of valorVentaDiaria) {
+                let fila = document.createElement('tr');
+                fila.innerHTML = `<td>${registro.semana}</td><td>${registro.dia}</td><td>${registro.valor.toFixed(2)}</td><td>${registro.inventario}</td><td>${registro.unidadesVendidasAcumuladas}</td>`;
+                tbody.appendChild(fila);
+            }
+        }
+    </script>
+</body>
+</html>
